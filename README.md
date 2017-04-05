@@ -28,7 +28,7 @@ Picture yourself as a backend engineer for a NASA fan website that generates a l
 sudo apt-get install libboost-all-dev
 ```
     
-2. If the first step is successfully completed, run **src.sh** script to compile original .cpp with C++11 by typing:
+2. If the first step is successfully completed, run **src.sh** script to start compile original .cpp with C++11 by typing:
 ```{sh }
 ./run.sh
 ```
@@ -73,7 +73,6 @@ _Format_: *resource*
     /shuttle/countdown/count.gif
     /shuttle/missions/sts-70/movies/woodpecker.mpg
     /shuttle/missions/sts-71/movies/crew-arrival-t38.mpg
-
 ```
 <a name="feature3"></a>
 ### Feature 3 (hours.txt)  
