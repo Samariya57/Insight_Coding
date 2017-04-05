@@ -45,7 +45,7 @@ We asume:
 2. All incorrect requests are stored in *"/log_output/incorrect.txt"* file and we don't process them;  
 3. Order of request parts is fixed and they are separated by spaces;
 4. The time zone is the same for all requests;
-5. Input consists of inly one non-empty file "log.txt";
+5. Input consists of only one non-empty file "log.txt";
 <a name="results"></a>
 ## Results  
 <a name="feature1"></a>
