@@ -162,7 +162,7 @@ int main()
 				// CurSecond is a garanteedly new second. We need to clean Blocked list 
 				if((Blocked.end()->second)>0)
 					for(iterat=Blocked.begin();iterat != Blocked.end(); iterat++)
-						if((iterat->second) <= (CurSecond-300)) Blocked.erase(iterat--);
+						if((iterat->second) <= (CurSecond-300)) Blocked.erase(iterat);
 			}		
 			QInHour += 1;//We anaway inserted one new request into HourTimeLoop
 			if((iterat=Blocked.find(LineParts[0]))!=Blocked.end())
