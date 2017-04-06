@@ -20,7 +20,7 @@ else
 		while true; do
 		    read -p "Do you want to restart the script?" yn
 		    case $yn in
-			[Yy]* ) ./stc.sh; break;;
+			[Yy]* ) ./run.sh; break;;
 			[Nn]* ) exit;;
 			* ) echo "Please answer yes or no.";;
 		    esac
