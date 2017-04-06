@@ -2,7 +2,7 @@
 ## Table of contents  
 1. [Introduction](README.md#introduction)  
 2. [How to run?](README.md#how_to_run)  
-    [Assamptions](README.md#assamptions)
+    [Assumptions](README.md#assamptions)
 3. [Results](README.md#results)    
     [Feature 1](README.md#feature1)  
     [Feature 2](README.md#feature2)  
