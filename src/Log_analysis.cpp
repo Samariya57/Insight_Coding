@@ -29,13 +29,13 @@ bool cmp(const std::pair<T, int>  &p1, const std::pair<T, int> &p2)
 };
 
 
-void insert_into_map (std::map<std::string,int> &mymap, std::string &inserted)
+void insert_into_map (std::map<std::string,int> &mymap, std::string &inserted, const int i)
 {
 	if (mymap.find(inserted) != mymap.end()) {
-		mymap[inserted] += 1;
+		mymap[inserted] += i;
 	}
 	else {
-		mymap.insert(std::make_pair(inserted, 1));
+		mymap.insert(std::make_pair(inserted, i));
 	}	
 };
 
@@ -112,14 +112,12 @@ int main()
 	std::map <time_t, int> HourTimeLoop; 	 //Map for current 60 minutes period
 	std::map <time_t, int> HoursBusyness; 	 //List of all 60 minutes periods
 	std::map <std::string, time_t> Blocked;  // List of current Blocked host/IP addresses. We renew it each non-empty second.
-	std::map <time_t, std::string> Users401; // List of requests with code 401. We renew it each time we have a 401 request
+	std::multimap <std::string, time_t> Users401; // List of requests with code 401. We renew it each time we have a 401 request
 	
 	std::string Line; 			 // String for reading logs 
 	time_t CurSecond,d,Dif; 
 
-	//std::map <time_t, std::string>::iterator iter;
 	std::map <std::string, time_t>::iterator iterat;	
-	//std::map <std::string, int>::iterator iterator;
 	std::map <std::time_t, int>::iterator ite;
 	
 	StrSplit LineParts;
@@ -127,11 +125,11 @@ int main()
 	int QInHour=0;
 	int SecondCount=0;
 	while(getline(log_file, Line)){
-		boost::split(LineParts, Line, boost::is_any_of(" "),boost::token_compress_on);   // Split line from "log.txt" into pieces	
+		boost::split(LineParts, Line, boost::is_any_of("\" "),boost::token_compress_on);   // Split line from "log.txt" into pieces	
 		LSize=LineParts.size();
 		if(LSize >=8) {
-			insert_into_map(MostActAcc,LineParts[0]);
-			insert_into_map(Answers,LineParts[LSize-2]);
+			insert_into_map(MostActAcc,LineParts[0],1);
+			insert_into_map(Answers,LineParts[LSize-2],1);
 			// Convert time of current request into seconds from epoch and add to HourTimeLoop
 			LineParts[3].erase(LineParts[3].find('['), 1);
 			CurSecond=seconds_from_epoch(LineParts[3]);
@@ -160,30 +158,45 @@ int main()
 					SecondCount -= 1;
 				}
 				// CurSecond is a garanteedly new second. We need to clean Blocked list 
-				if((Blocked.end()->second)>0)
-					for(iterat=Blocked.begin();iterat != Blocked.end(); iterat++)
-						if((iterat->second) <= (CurSecond-300)) Blocked.erase(iterat);
+				if((Blocked.end()->second)>0){
+					std::vector <std::string> RemoveArray;
+					for(auto iterato=Blocked.begin();iterato != Blocked.end(); iterato++){
+						if((iterato->second) <= (CurSecond-300)){
+							RemoveArray.push_back(iterato->first);
+						}
+					}
+					for (int x=0;x!=RemoveArray.size(); x++){
+						Blocked.erase(Blocked.find(RemoveArray[x]));
+					}	
+				}	
 			}		
 			QInHour += 1;//We anaway inserted one new request into HourTimeLoop
 			if((iterat=Blocked.find(LineParts[0]))!=Blocked.end())
 				blocked << Line << std::endl; //Write requests when host/IP is blocked
 			ReqCode=atoi(LineParts[LSize-2].c_str());// Server code as an integer
 			if((ReqCode == 401 )and(iterat==Blocked.end())){
-				Users401.insert(make_pair(CurSecond,LineParts[0]));
-				Users401.erase(Users401.begin(), Users401.lower_bound(CurSecond-20));
-				int CurUser401Q = 0;
-				for(auto iter = Users401.begin();iter != Users401.end(); iter++)
-					if(iter->second == LineParts[0]) CurUser401Q +=1;
+				Users401.insert(make_pair(LineParts[0],CurSecond));
+				std::vector <std::string> RemoveArray;
+				for(auto iteratos=Users401.begin();iteratos != Users401.end(); iteratos++){
+					if((iteratos->second) <= (CurSecond-20)){
+						RemoveArray.push_back(iteratos->first);
+					}
+				}
+				for (int x=0;x!=RemoveArray.size(); x++){
+					Users401.erase(Users401.find(RemoveArray[x]));
+				}
+				int CurUser401Q = Users401.count(LineParts[0]);
+				//for(auto iter = Users401.begin();iter != Users401.end(); iter++)
+				//	if(iter->second == LineParts[0]) CurUser401Q +=1;
 				if(CurUser401Q >= 3) 
 					Blocked.insert(make_pair(LineParts[0],CurSecond));
 			}
 			else if(ReqCode == 404 )
-				insert_into_map(NotFound,LineParts[6]);
+				insert_into_map(NotFound,LineParts[6],1);
 			else if((ReqCode >= 500))
 				servererror << Line << std::endl;
-			insert_into_map(MostBand,LineParts[6]);
-			if(Sizes.find(LineParts[6]) == Sizes.end())
-				Sizes.insert(std::make_pair(LineParts[6],atoi(LineParts[LSize-1].c_str())));
+			insert_into_map(MostBand,LineParts[6],1);
+			insert_into_map (Sizes,LineParts[6],atoi(LineParts[LSize-1].c_str()));
 		}
 		else incorrect << Line << std::endl; //Write all incorrect requests
 	} //Processing the last ten possible Most Busiest hours.
@@ -196,13 +209,6 @@ int main()
 			if((ite = HourTimeLoop.find(FirstSecond+r))!=HourTimeLoop.end())
 				QInHour -= ite -> second;
 		}
-	}
-	// Sort and print the most popular website parts  
-	std::vector<std::pair<std::string, int> > pairs2(MostBand.begin(), MostBand.end());
-	int i = 0;
-	for(auto iterator=Sizes.begin(); iterator != Sizes.end(); iterator++){
-		(iterator->second) = (iterator->second)*pairs2[i].second;	
-		i += 1;			
 	}
 	// Sort Most_act_acc map 
 	sort_and_print(MostActAcc, 10, hosts, 2);
@@ -246,3 +252,4 @@ int main()
 	servererror.close();
 	return 0;
 }
+
